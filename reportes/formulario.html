@@ -1,0 +1,323 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Reportar Incidencia - Metro CDMX</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'metro-blue': '#0066CC',
+                        'metro-orange': '#FF6B35'
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center px-4 py-12">
+    <div class="max-w-2xl w-full bg-white rounded-lg shadow-xl p-8">
+        <div class="text-center mb-8">
+            <div class="w-16 h-16 bg-metro-orange rounded-full flex items-center justify-center mx-auto mb-4">
+                <span class="text-white font-bold text-2xl">📋</span>
+            </div>
+            <h2 class="text-3xl font-bold text-gray-900">Enviar Reporte</h2>
+            <p class="text-gray-600 mt-2">Sistema de Reportes - Metro CDMX</p>
+        </div>
+
+        <div id="successMessage" class="mb-4 p-3 bg-green-100 border border-green-400 text-green-700 rounded hidden"></div>
+        <div id="errorMessage" class="mb-4 p-3 bg-red-100 border border-red-400 text-red-700 rounded hidden"></div>
+
+        <form id="reportForm" class="space-y-4">
+            <!-- Línea del Metro -->
+            <div>
+                <label for="linea" class="block text-sm font-medium text-gray-700 mb-2">
+                    Línea del Metro <span class="text-red-500">*</span>
+                </label>
+                <select
+                    id="linea"
+                    required
+                    class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-metro-blue focus:border-transparent"
+                >
+                    <option value="">Seleccione una línea</option>
+                    <option value="Línea 1">Línea 1 - Rosa</option>
+                    <option value="Línea 2">Línea 2 - Azul</option>
+                    <option value="Línea 3">Línea 3 - Verde Olivo</option>
+                    <option value="Línea 4">Línea 4 - Cielo</option>
+                    <option value="Línea 5">Línea 5 - Amarilla</option>
+                    <option value="Línea 6">Línea 6 - Roja</option>
+                    <option value="Línea 7">Línea 7 - Naranja</option>
+                    <option value="Línea 8">Línea 8 - Verde</option>
+                    <option value="Línea 9">Línea 9 - Café</option>
+                    <option value="Línea 12">Línea 12 - Dorada</option>
+                    <option value="Línea A">Línea A - Morada</option>
+                    <option value="Línea B">Línea B - Verde y Gris</option>
+                </select>
+            </div>
+
+            <!-- Estación -->
+            <div>
+                <label for="estacion" class="block text-sm font-medium text-gray-700 mb-2">
+                    Estación <span class="text-red-500">*</span>
+                </label>
+                <select
+                    id="estacion"
+                    required
+                    disabled
+                    class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-metro-blue focus:border-transparent disabled:bg-gray-100 disabled:cursor-not-allowed"
+                >
+                    <option value="">Primero selecciona una línea</option>
+                </select>
+            </div>
+
+            <!-- Nombre del Remitente -->
+            <div>
+                <label for="nombre_remitente" class="block text-sm font-medium text-gray-700 mb-2">
+                    Nombre Completo
+                </label>
+                <input
+                    id="nombre_remitente"
+                    type="text"
+                    maxlength="100"
+                    class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-metro-blue focus:border-transparent"
+                    placeholder="Tu nombre (opcional)"
+                />
+            </div>
+
+            <!-- Email del Remitente -->
+            <div>
+                <label for="email_remitente" class="block text-sm font-medium text-gray-700 mb-2">
+                    Email
+                </label>
+                <input
+                    id="email_remitente"
+                    type="email"
+                    maxlength="100"
+                    class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-metro-blue focus:border-transparent"
+                    placeholder="tu@email.com (opcional)"
+                />
+            </div>
+
+            <!-- Categoría -->
+            <div>
+                <label for="categoria" class="block text-sm font-medium text-gray-700 mb-2">
+                    Categoría <span class="text-red-500">*</span>
+                </label>
+                <select
+                    id="categoria"
+                    required
+                    class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-metro-blue focus:border-transparent"
+                >
+                    <option value="">Seleccione una categoría</option>
+                    <option value="Trabajadores">Trabajadores</option>
+                    <option value="Consultas/Dudas">Consultas/Dudas</option>
+                    <option value="Sugerencias">Sugerencias</option>
+                    <option value="Retrasos">Retrasos</option>
+                    <option value="Asientos reservados">Asientos reservados</option>
+                    <option value="Fallas Técnicas">Fallas Técnicas</option>
+                    <option value="Mantenimiento/Limpieza">Mantenimiento/Limpieza</option>
+                    <option value="Accesibilidad">Accesibilidad</option>
+                    <option value="Cancelaciones">Cancelaciones</option>
+                    <option value="Información/Comunicación">Información/Comunicación</option>
+                    <option value="Seguridad">Seguridad</option>
+                    <option value="Trato del Personal">Trato del Personal</option>
+                    <option value="Espacio/Capacidad">Espacio/Capacidad</option>
+                </select>
+            </div>
+
+            <!-- Asunto -->
+            <div>
+                <label for="asunto" class="block text-sm font-medium text-gray-700 mb-2">
+                    Asunto <span class="text-red-500">*</span>
+                </label>
+                <input
+                    id="asunto"
+                    type="text"
+                    required
+                    maxlength="255"
+                    class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-metro-blue focus:border-transparent"
+                    placeholder="Breve descripción del problema"
+                />
+            </div>
+
+            <!-- Contenido -->
+            <div>
+                <label for="contenido" class="block text-sm font-medium text-gray-700 mb-2">
+                    Descripción Detallada <span class="text-red-500">*</span>
+                </label>
+                <textarea
+                    id="contenido"
+                    required
+                    rows="5"
+                    class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-metro-blue focus:border-transparent resize-vertical"
+                    placeholder="Describe tu reporte de manera detallada..."
+                ></textarea>
+            </div>
+
+            <!-- Botón de Envío -->
+            <button
+                type="submit"
+                id="submitButton"
+                class="w-full px-4 py-3 bg-metro-blue text-white rounded-lg font-semibold hover:bg-blue-700 transition disabled:opacity-50 disabled:cursor-not-allowed mt-6"
+            >
+                Enviar Reporte
+            </button>
+        </form>
+
+        <div class="mt-6 text-center">
+            <a href="dashboard.html" class="text-gray-500 hover:text-gray-700">
+                ← Volver al panel
+            </a>
+        </div>
+    </div>
+
+    <script>
+        // Datos de las líneas y estaciones del Metro CDMX
+        const datosMetro = {
+            "Línea 1": ["Observatorio", "Tacubaya", "Juanacatlán", "Chapultepec", "Sevilla", "Insurgentes", "Cuauhtémoc", "Balderas", "Salto del Agua", "Isabel la Católica", "Pino Suárez", "Merced", "Candelaria", "San Lázaro", "Moctezuma", "Balbuena", "Boulevard Puerto Aéreo", "Gómez Farías", "Zaragoza", "Pantitlán"],
+            "Línea 2": ["Cuatro Caminos", "Panteones", "Tacuba", "Cuitláhuac", "Popotla", "Colegio Militar", "Normal", "San Cosme", "Revolución", "Hidalgo", "Bellas Artes", "Allende", "Zócalo", "Pino Suárez", "San Antonio Abad", "Chabacano", "Viaducto", "Xola", "Villa de Cortés", "Nativitas", "Portales", "Ermita", "General Anaya", "Tasqueña"],
+            "Línea 3": ["Indios Verdes", "Deportivo 18 de Marzo", "Potrero", "La Raza", "Tlatelolco", "Guerrero", "Hidalgo", "Juárez", "Balderas", "Niños Héroes", "Hospital General", "Centro Médico", "Etiopía", "Eugenia", "División del Norte", "Zapata", "Coyoacán", "Viveros", "Miguel Ángel de Quevedo", "Copilco", "Universidad"],
+            "Línea 4": ["Martín Carrera", "Talismán", "Bondojito", "Consulado", "Canal del Norte", "Morelos", "Candelaria", "Fray Servando", "Jamaica", "Santa Anita"],
+            "Línea 5": ["Politécnico", "Instituto del Petróleo", "Autobuses del Norte", "La Raza", "Misterios", "Valle Gómez", "Consulado", "Eduardo Molina", "Aragón", "Oceanía", "Terminal Aérea", "Hangares", "Pantitlán"],
+            "Línea 6": ["El Rosario", "Tezozómoc", "Azcapotzalco", "Ferrería", "Norte 45", "Vallejo", "Instituto del Petróleo", "Lindavista", "Deportivo 18 de Marzo", "La Villa-Basílica", "Martín Carrera"],
+            "Línea 7": ["El Rosario", "Aquiles Serdán", "Camarones", "Refinería", "Tacuba", "San Joaquín", "Polanco", "Auditorio", "Constituyentes", "Tacubaya", "San Pedro de los Pinos", "San Antonio", "Mixcoac", "Barranca del Muerto"],
+            "Línea 8": ["Garibaldi/Lagunilla", "Bellas Artes", "San Juan de Letrán", "Salto del Agua", "Doctores", "Obrera", "Chabacano", "La Viga", "Santa Anita", "Coyuya", "Iztacalco", "Apatlaco", "Aculco", "Escuadrón 201", "Atlalilco", "Iztapalapa", "Cerro de la Estrella", "UAM-I", "Constitución de 1917"],
+            "Línea 9": ["Tacubaya", "Patriotismo", "Chilpancingo", "Centro Médico", "Lázaro Cárdenas", "Chabacano", "Jamaica", "Mixiuhca", "Velódromo", "Ciudad Deportiva", "Puebla", "Pantitlán"],
+            "Línea 12": ["Mixcoac", "Insurgentes Sur", "Hospital 20 de Noviembre", "Zapata", "Parque de los Venados", "Eje Central", "Ermita", "Mexicaltzingo", "Atlalilco", "Culhuacán", "San Andrés Tomatlán", "Lomas Estrella", "Calle 11", "Periférico Oriente", "Tezonco", "Olivos", "Nopalera", "Zapotitlán", "Tlaltenco", "Tláhuac"],
+            "Línea A": ["Pantitlán", "Agrícola Oriental", "Canal de San Juan", "Tepalcates", "Guelatao", "Peñón Viejo", "Acatitla", "Santa Marta", "Los Reyes", "La Paz"],
+            "Línea B": ["Ciudad Azteca", "Plaza Aragón", "Olímpica", "Ecatepec", "Múzquiz", "Río de los Remedios", "Impulsora", "Nezahualcóyotl", "Villa de Aragón", "Bosque de Aragón", "Deportivo Oceanía", "Oceanía", "Romero Rubio", "R. Flores Magón", "San Lázaro", "Morelos", "Tepito", "Lagunilla", "Garibaldi/Lagunilla", "Guerrero", "Buenavista"]
+        };
+
+        // Obtener elementos
+        const lineaSelect = document.getElementById('linea');
+        const estacionSelect = document.getElementById('estacion');
+
+        // Evento para cambiar las estaciones cuando se selecciona una línea
+        lineaSelect.addEventListener('change', function() {
+            const lineaSeleccionada = this.value;
+            
+            // Limpiar el select de estaciones
+            estacionSelect.innerHTML = '<option value="">Seleccione una estación</option>';
+            
+            if (lineaSeleccionada && datosMetro[lineaSeleccionada]) {
+                // Habilitar el select de estaciones
+                estacionSelect.disabled = false;
+                
+                // Agregar las estaciones de la línea seleccionada
+                datosMetro[lineaSeleccionada].forEach(estacion => {
+                    const option = document.createElement('option');
+                    option.value = estacion;
+                    option.textContent = estacion;
+                    estacionSelect.appendChild(option);
+                });
+            } else {
+                // Deshabilitar el select si no hay línea seleccionada
+                estacionSelect.disabled = true;
+                estacionSelect.innerHTML = '<option value="">Primero selecciona una línea</option>';
+            }
+        });
+
+        // Manejo del formulario
+        document.getElementById('reportForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const linea = document.getElementById('linea').value;
+            const estacion = document.getElementById('estacion').value;
+            const nombre_remitente = document.getElementById('nombre_remitente').value;
+            const email_remitente = document.getElementById('email_remitente').value;
+            const categoria = document.getElementById('categoria').value;
+            const asunto = document.getElementById('asunto').value;
+            const contenido = document.getElementById('contenido').value;
+            
+            const errorMessage = document.getElementById('errorMessage');
+            const successMessage = document.getElementById('successMessage');
+            const submitButton = document.getElementById('submitButton');
+            
+            // Ocultar mensajes previos
+            errorMessage.classList.add('hidden');
+            successMessage.classList.add('hidden');
+            
+            // Validaciones básicas
+            if (!linea || !estacion || !categoria || !asunto || !contenido) {
+                errorMessage.textContent = 'Por favor completa todos los campos obligatorios (*)';
+                errorMessage.classList.remove('hidden');
+                return;
+            }
+            
+            // Deshabilitar botón
+            submitButton.disabled = true;
+            submitButton.textContent = 'Enviando reporte...';
+            
+            try {
+                // Preparar datos para enviar
+                const reportData = {
+                    linea: linea,
+                    estacion: estacion,
+                    nombre_remitente: nombre_remitente || null,
+                    email_remitente: email_remitente || null,
+                    asunto: asunto,
+                    contenido: contenido,
+                    categoria: categoria
+                    // fecha se generará automáticamente en el backend
+                };
+                
+                console.log('Datos a enviar:', reportData);
+                
+                // --- INICIO DE CODIGO NUEVO ---
+                // Llamada real al backend Python
+                const response = await fetch('http://127.0.0.1:8000/reportes', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(reportData)
+                });
+                
+                if (!response.ok) {
+                    throw new Error('Error al conectar con el servidor Python');
+                }
+                
+                const data = await response.json();
+                console.log("Respuesta del servidor:", data);
+                // --- FIN DE CODIGO NUEVO ---
+
+                // Simulación de envío exitoso (Visual)
+                setTimeout(() => {
+                    // ... resto de tu código original para mostrar mensaje éxito
+                    successMessage.textContent = '✓ Reporte enviado exitosamente';
+                    successMessage.classList.remove('hidden');
+                    
+                    // Limpiar formulario
+                    document.getElementById('reportForm').reset();
+                    
+                    // Deshabilitar el select de estaciones nuevamente
+                    estacionSelect.disabled = true;
+                    estacionSelect.innerHTML = '<option value="">Primero selecciona una línea</option>';
+                    
+                    // Restaurar botón
+                    submitButton.disabled = false;
+                    submitButton.textContent = 'Enviar Reporte';
+                    
+                    // Scroll hacia arriba para ver el mensaje
+                    window.scrollTo({ top: 0, behavior: 'smooth' });
+                    
+                    // Opcional: Redireccionar después de 2 segundos
+                    // setTimeout(() => {
+                    //     window.location.href = 'dashboard.html';
+                    // }, 2000);
+                }, 1500);
+                
+            } catch (error) {
+                console.error('Error:', error);
+                errorMessage.textContent = 'Error al enviar el reporte. Intenta nuevamente.';
+                errorMessage.classList.remove('hidden');
+                submitButton.disabled = false;
+                submitButton.textContent = 'Enviar Reporte';
+            }
+        });
+    </script>
+</body>
+</html>

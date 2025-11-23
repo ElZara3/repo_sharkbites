@@ -1,0 +1,42 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:15-alpine
+    container_name: metro_postgres
+    environment:
+      POSTGRES_USER: metro_user
+      POSTGRES_PASSWORD: metro_password
+      POSTGRES_DB: metro_db
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./sql/base_de_datos_metro.sql:/docker-entrypoint-initdb.d/01-datos.sql
+      - ./sql/tablas_tiempo_real.sql:/docker-entrypoint-initdb.d/02-tiempo-real.sql  # ← AGREGAR ESTA LÍNEA
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U metro_user -d metro_db"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  reportes:
+    build:
+      context: ./reportes
+      dockerfile: Dockerfile
+    container_name: metro_reportes
+    ports:
+      - "5000:5000"
+    environment:
+      - POSTGRES_DB=metro_db
+      - POSTGRES_USER=metro_user
+      - POSTGRES_PASSWORD=metro_password
+      - DB_HOST=postgres
+      - DB_PORT=5432
+    depends_on:
+      postgres:
+        condition: service_healthy
+    restart: unless-stopped
+
+volumes:
+  postgres_data:

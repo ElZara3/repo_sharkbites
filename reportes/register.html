@@ -1,0 +1,333 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Registro de Personal - Metro CDMX</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'metro-blue': '#0066CC'
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center px-4 py-12">
+    <div class="max-w-2xl w-full bg-white rounded-lg shadow-xl p-8">
+        <div class="text-center mb-8">
+            <div class="w-16 h-16 bg-metro-blue rounded-full flex items-center justify-center mx-auto mb-4">
+                <span class="text-white font-bold text-2xl">M</span>
+            </div>
+            <h2 class="text-3xl font-bold text-gray-900" id="pageTitle">Registrar Personal</h2>
+            <p class="text-gray-600 mt-2">Sistema de Gestión - Metro CDMX</p>
+        </div>
+
+        <div id="errorMessage" class="mb-4 p-3 bg-red-100 border border-red-400 text-red-700 rounded hidden"></div>
+        <div id="successMessage" class="mb-4 p-3 bg-green-100 border border-green-400 text-green-700 rounded hidden"></div>
+
+        <form id="registerForm" class="space-y-4">
+            <!-- Tipo de Usuario -->
+            <div>
+                <label for="user_type" class="block text-sm font-medium text-gray-700 mb-2">
+                    Tipo de Usuario <span class="text-red-500">*</span>
+                </label>
+                <select
+                    id="user_type"
+                    required
+                    class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-metro-blue focus:border-transparent"
+                >
+                    <option value="">Selecciona un tipo</option>
+                    <option value="area_manager">Jefe de Área</option>
+                    <option value="employee">Empleado</option>
+                </select>
+            </div>
+
+            <!-- Información Personal -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                    <label for="full_name" class="block text-sm font-medium text-gray-700 mb-2">
+                        Nombre Completo <span class="text-red-500">*</span>
+                    </label>
+                    <input
+                        id="full_name"
+                        type="text"
+                        required
+                        class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-metro-blue focus:border-transparent"
+                        placeholder="Juan Pérez García"
+                    />
+                </div>
+
+                <div>
+                    <label for="employee_code" class="block text-sm font-medium text-gray-700 mb-2">
+                        Código de Empleado <span class="text-red-500">*</span>
+                    </label>
+                    <input
+                        id="employee_code"
+                        type="text"
+                        required
+                        class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-metro-blue focus:border-transparent"
+                        placeholder="EMP-001"
+                    />
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                    <label for="email" class="block text-sm font-medium text-gray-700 mb-2">
+                        Email Corporativo <span class="text-red-500">*</span>
+                    </label>
+                    <input
+                        id="email"
+                        type="email"
+                        required
+                        class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-metro-blue focus:border-transparent"
+                        placeholder="juan.perez@metro.cdmx.gob.mx"
+                    />
+                </div>
+
+                <div>
+                    <label for="phone" class="block text-sm font-medium text-gray-700 mb-2">
+                        Teléfono <span class="text-red-500">*</span>
+                    </label>
+                    <input
+                        id="phone"
+                        type="tel"
+                        required
+                        class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-metro-blue focus:border-transparent"
+                        placeholder="+52 55 1234 5678"
+                    />
+                </div>
+            </div>
+
+            <!-- Área (solo para Jefes de Área) -->
+            <div id="areaField" class="hidden">
+                <label for="area" class="block text-sm font-medium text-gray-700 mb-2">
+                    Área de Responsabilidad <span class="text-red-500">*</span>
+                </label>
+                <select
+                    id="area"
+                    class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-metro-blue focus:border-transparent"
+                >
+                    <option value="">Selecciona un área</option>
+                    <option value="mantenimiento">Mantenimiento</option>
+                    <option value="operaciones">Operaciones</option>
+                    <option value="seguridad">Seguridad</option>
+                    <option value="limpieza">Limpieza</option>
+                    <option value="atencion_usuario">Atención al Usuario</option>
+                    <option value="infraestructura">Infraestructura</option>
+                </select>
+            </div>
+
+            <!-- Jefe de Área (solo para Empleados) -->
+            <div id="managerField" class="hidden">
+                <label for="manager_id" class="block text-sm font-medium text-gray-700 mb-2">
+                    Jefe de Área Asignado <span class="text-red-500">*</span>
+                </label>
+                <select
+                    id="manager_id"
+                    class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-metro-blue focus:border-transparent"
+                >
+                    <option value="">Selecciona un jefe</option>
+                    <!-- Se llenarían dinámicamente desde el backend -->
+                    <option value="1">Carlos Rodríguez - Mantenimiento</option>
+                    <option value="2">Ana Martínez - Operaciones</option>
+                    <option value="3">Luis Hernández - Seguridad</option>
+                </select>
+            </div>
+
+            <!-- Estación Asignada (solo para Empleados) -->
+            <div id="stationField" class="hidden">
+                <label for="station_id" class="block text-sm font-medium text-gray-700 mb-2">
+                    Estación Base Asignada
+                </label>
+                <input
+                    id="station_id"
+                    type="text"
+                    class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-metro-blue focus:border-transparent"
+                    placeholder="Ej: Pino Suárez"
+                />
+            </div>
+
+            <!-- Contraseña -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                    <label for="password" class="block text-sm font-medium text-gray-700 mb-2">
+                        Contraseña <span class="text-red-500">*</span>
+                    </label>
+                    <input
+                        id="password"
+                        type="password"
+                        required
+                        class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-metro-blue focus:border-transparent"
+                        placeholder="Mínimo 8 caracteres"
+                    />
+                </div>
+
+                <div>
+                    <label for="confirmPassword" class="block text-sm font-medium text-gray-700 mb-2">
+                        Confirmar Contraseña <span class="text-red-500">*</span>
+                    </label>
+                    <input
+                        id="confirmPassword"
+                        type="password"
+                        required
+                        class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-metro-blue focus:border-transparent"
+                        placeholder="Repite la contraseña"
+                    />
+                </div>
+            </div>
+
+            <!-- Botones -->
+            <div class="flex space-x-4 pt-4">
+                <button
+                    type="submit"
+                    id="submitButton"
+                    class="flex-1 px-4 py-3 bg-metro-blue text-white rounded-lg font-semibold hover:bg-blue-600 transition disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                    Registrar Personal
+                </button>
+                <button
+                    type="button"
+                    onclick="window.history.back()"
+                    class="px-6 py-3 border-2 border-gray-300 text-gray-700 font-semibold rounded-lg hover:bg-gray-50 transition"
+                >
+                    Cancelar
+                </button>
+            </div>
+        </form>
+
+        <div class="mt-6 text-center text-sm text-gray-500">
+            <p>Este formulario solo está disponible para administradores y jefes de área</p>
+        </div>
+    </div>
+
+    <script>
+        const userTypeSelect = document.getElementById('user_type');
+        const areaField = document.getElementById('areaField');
+        const managerField = document.getElementById('managerField');
+        const stationField = document.getElementById('stationField');
+        const areaSelect = document.getElementById('area');
+        const managerSelect = document.getElementById('manager_id');
+
+        // Mostrar/ocultar campos según tipo de usuario
+        userTypeSelect.addEventListener('change', function() {
+            const userType = this.value;
+            
+            if (userType === 'area_manager') {
+                areaField.classList.remove('hidden');
+                managerField.classList.add('hidden');
+                stationField.classList.add('hidden');
+                areaSelect.required = true;
+                managerSelect.required = false;
+            } else if (userType === 'employee') {
+                areaField.classList.add('hidden');
+                managerField.classList.remove('hidden');
+                stationField.classList.remove('hidden');
+                areaSelect.required = false;
+                managerSelect.required = true;
+            } else {
+                areaField.classList.add('hidden');
+                managerField.classList.add('hidden');
+                stationField.classList.add('hidden');
+                areaSelect.required = false;
+                managerSelect.required = false;
+            }
+        });
+
+        document.getElementById('registerForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const formData = {
+                user_type: document.getElementById('user_type').value,
+                full_name: document.getElementById('full_name').value,
+                employee_code: document.getElementById('employee_code').value,
+                email: document.getElementById('email').value,
+                phone: document.getElementById('phone').value,
+                password: document.getElementById('password').value,
+                confirmPassword: document.getElementById('confirmPassword').value
+            };
+
+            // Agregar campos específicos según tipo
+            if (formData.user_type === 'area_manager') {
+                formData.area = document.getElementById('area').value;
+            } else if (formData.user_type === 'employee') {
+                formData.manager_id = document.getElementById('manager_id').value;
+                formData.station_id = document.getElementById('station_id').value;
+            }
+
+            const errorMessage = document.getElementById('errorMessage');
+            const successMessage = document.getElementById('successMessage');
+            const submitButton = document.getElementById('submitButton');
+            
+            // Ocultar mensajes previos
+            errorMessage.classList.add('hidden');
+            successMessage.classList.add('hidden');
+            
+            // Validaciones
+            if (formData.password !== formData.confirmPassword) {
+                errorMessage.textContent = 'Las contraseñas no coinciden';
+                errorMessage.classList.remove('hidden');
+                return;
+            }
+            
+            if (formData.password.length < 8) {
+                errorMessage.textContent = 'La contraseña debe tener al menos 8 caracteres';
+                errorMessage.classList.remove('hidden');
+                return;
+            }
+
+            if (formData.user_type === 'area_manager' && !formData.area) {
+                errorMessage.textContent = 'Debes seleccionar un área';
+                errorMessage.classList.remove('hidden');
+                return;
+            }
+
+            if (formData.user_type === 'employee' && !formData.manager_id) {
+                errorMessage.textContent = 'Debes seleccionar un jefe de área';
+                errorMessage.classList.remove('hidden');
+                return;
+            }
+            
+            // Deshabilitar botón
+            submitButton.disabled = true;
+            submitButton.textContent = 'Registrando...';
+            
+            // Simulación de registro (reemplazar con llamada API real)
+            try {
+                // Aquí irían las llamadas a tu API
+                // const response = await fetch('API_URL/auth/register-staff', {
+                //     method: 'POST',
+                //     headers: { 'Content-Type': 'application/json' },
+                //     body: JSON.stringify(formData)
+                // });
+                
+                await new Promise(resolve => setTimeout(resolve, 1500));
+                
+                // Mostrar éxito
+                const userTypeName = formData.user_type === 'area_manager' ? 'Jefe de Área' : 'Empleado';
+                successMessage.textContent = `✓ ${userTypeName} registrado exitosamente: ${formData.full_name}`;
+                successMessage.classList.remove('hidden');
+                
+                // Limpiar formulario
+                document.getElementById('registerForm').reset();
+                
+                // Redirigir después de 2 segundos
+                setTimeout(() => {
+                    window.history.back();
+                }, 2000);
+                
+            } catch (error) {
+                errorMessage.textContent = 'Error al registrar. Intenta nuevamente.';
+                errorMessage.classList.remove('hidden');
+                submitButton.disabled = false;
+                submitButton.textContent = 'Registrar Personal';
+            }
+        });
+    </script>
+</body>
+</html>

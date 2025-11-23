@@ -1,0 +1,440 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Panel de Jefe de Área - Metro CDMX</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'metro-blue': '#0066CC'
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="min-h-screen bg-gray-100">
+    <!-- Header -->
+    <header class="bg-gradient-to-r from-purple-600 to-purple-800 text-white shadow-lg">
+        <div class="max-w-7xl mx-auto px-4 py-4">
+            <h1 class="text-2xl font-bold">👨‍💼 Panel de Jefe de Área</h1>
+            <p class="text-purple-100">Gestión de Equipo y Asignación de Recursos</p>
+        </div>
+    </header>
+
+    <main class="max-w-7xl mx-auto px-4 py-8">
+        <!-- Resumen de Disponibilidad -->
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
+            <div class="bg-white rounded-lg shadow p-6">
+                <div class="text-3xl mb-2">👥</div>
+                <div class="text-2xl font-bold text-gray-900" id="totalEmployees">0</div>
+                <div class="text-sm text-gray-600">Total Empleados</div>
+            </div>
+            <div class="bg-white rounded-lg shadow p-6">
+                <div class="text-3xl mb-2">✅</div>
+                <div class="text-2xl font-bold text-green-600" id="availableEmployees">0</div>
+                <div class="text-sm text-gray-600">Disponibles</div>
+            </div>
+            <div class="bg-white rounded-lg shadow p-6">
+                <div class="text-3xl mb-2">⏱️</div>
+                <div class="text-2xl font-bold text-yellow-600" id="busyEmployees">0</div>
+                <div class="text-sm text-gray-600">Ocupados</div>
+            </div>
+            <div class="bg-white rounded-lg shadow p-6">
+                <div class="text-3xl mb-2">📊</div>
+                <div class="text-2xl font-bold text-purple-600" id="availabilityPercentage">0%</div>
+                <div class="text-sm text-gray-600">Tasa Disponibilidad</div>
+            </div>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            <!-- Puntos Críticos -->
+            <div class="bg-white rounded-lg shadow-lg p-6">
+                <h2 class="text-xl font-bold text-gray-900 mb-4">🚨 Puntos Críticos</h2>
+
+                <div id="criticalPointsContainer" class="space-y-4 max-h-96 overflow-y-auto">
+                    <!-- Se cargan dinámicamente -->
+                </div>
+            </div>
+
+            <!-- Mi Equipo -->
+            <div class="bg-white rounded-lg shadow-lg p-6">
+                <h2 class="text-xl font-bold text-gray-900 mb-4">👥 Mi Equipo</h2>
+
+                <div id="teamContainer" class="space-y-3 max-h-96 overflow-y-auto">
+                    <!-- Se cargan dinámicamente -->
+                </div>
+            </div>
+        </div>
+
+        <!-- Recomendaciones de IA -->
+        <div id="recommendationsSection" class="mt-8 bg-gradient-to-r from-purple-50 to-pink-50 rounded-lg shadow-lg p-6 border-2 border-purple-200 hidden">
+            <h2 class="text-2xl font-bold text-gray-900 mb-4">
+                🤖 Recomendaciones de IA - Incidente #<span id="selectedIncidentId"></span>
+            </h2>
+            <p class="text-sm text-gray-600 mb-6">
+                El sistema de IA ha analizado disponibilidad, distancia y carga de trabajo para recomendar los mejores empleados:
+            </p>
+
+            <div id="recommendationsContainer" class="space-y-4">
+                <!-- Se cargan dinámicamente -->
+            </div>
+        </div>
+    </main>
+
+    <script>
+        // Mock data
+        const mockData = {
+            availability: {
+                total: 8,
+                available: 5,
+                busy: 2,
+                offline: 1,
+                available_percentage: 62.5
+            },
+            criticalPoints: [
+                {
+                    station: { id: 1, name: 'Pino Suárez', line: 'Línea 1' },
+                    criticality_score: 85,
+                    incident_count: 3,
+                    incidents: [
+                        {
+                            id: 101,
+                            category: 'Falla Técnica',
+                            severity: 'high',
+                            description: 'Torniquetes no funcionan correctamente'
+                        },
+                        {
+                            id: 102,
+                            category: 'Aglomeración',
+                            severity: 'medium',
+                            description: 'Alta concentración de usuarios'
+                        }
+                    ]
+                },
+                {
+                    station: { id: 2, name: 'Balderas', line: 'Línea 3' },
+                    criticality_score: 72,
+                    incident_count: 2,
+                    incidents: [
+                        {
+                            id: 103,
+                            category: 'Limpieza',
+                            severity: 'medium',
+                            description: 'Requiere limpieza urgente'
+                        }
+                    ]
+                }
+            ],
+            teamEmployees: [
+                {
+                    id: 1,
+                    full_name: 'Juan Pérez',
+                    employee_code: 'EMP-001',
+                    status: 'available',
+                    current_station: { name: 'Pino Suárez', line: 'Línea 1' },
+                    location: { latitude: 19.4326, longitude: -99.1332 },
+                    last_update: new Date().toISOString()
+                },
+                {
+                    id: 2,
+                    full_name: 'María García',
+                    employee_code: 'EMP-002',
+                    status: 'available',
+                    current_station: { name: 'Zaragoza', line: 'Línea 1' },
+                    location: { latitude: 19.4120, longitude: -99.0823 },
+                    last_update: new Date().toISOString()
+                },
+                {
+                    id: 3,
+                    full_name: 'Carlos López',
+                    employee_code: 'EMP-003',
+                    status: 'busy',
+                    current_station: { name: 'Balderas', line: 'Línea 3' },
+                    location: { latitude: 19.4278, longitude: -99.1545 },
+                    last_update: new Date().toISOString()
+                }
+            ]
+        };
+
+        document.addEventListener('DOMContentLoaded', function() {
+            loadData();
+            // Recargar cada 30 segundos
+            setInterval(loadData, 30000);
+        });
+
+        function loadData() {
+            loadAvailability();
+            loadCriticalPoints();
+            loadTeam();
+        }
+
+        function loadAvailability() {
+            const data = mockData.availability;
+            document.getElementById('totalEmployees').textContent = data.total;
+            document.getElementById('availableEmployees').textContent = data.available;
+            document.getElementById('busyEmployees').textContent = data.busy;
+            document.getElementById('availabilityPercentage').textContent = data.available_percentage.toFixed(1) + '%';
+        }
+
+        function loadCriticalPoints() {
+            const container = document.getElementById('criticalPointsContainer');
+            
+            if (mockData.criticalPoints.length === 0) {
+                container.innerHTML = `
+                    <div class="text-center py-8 text-gray-500">
+                        ✓ No hay puntos críticos actualmente
+                    </div>
+                `;
+                return;
+            }
+
+            container.innerHTML = '';
+            mockData.criticalPoints.forEach(point => {
+                const div = document.createElement('div');
+                div.className = 'border-2 border-red-200 rounded-lg p-4 hover:shadow-md transition';
+                div.innerHTML = `
+                    <div class="flex justify-between items-start mb-3">
+                        <div>
+                            <h3 class="font-bold text-gray-900">${point.station.name}</h3>
+                            <div class="text-sm text-gray-600">${point.station.line}</div>
+                        </div>
+                        <div class="text-right">
+                            <div class="text-2xl font-bold text-red-600">${point.criticality_score}</div>
+                            <div class="text-xs text-gray-500">Score</div>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <span class="px-3 py-1 bg-red-100 text-red-800 rounded-full text-sm font-semibold">
+                            ${point.incident_count} incidente(s)
+                        </span>
+                    </div>
+
+                    <div class="space-y-2">
+                        ${point.incidents.slice(0, 2).map(incident => `
+                            <div class="bg-gray-50 p-2 rounded cursor-pointer hover:bg-gray-100" onclick="getRecommendations(${incident.id})">
+                                <div class="flex justify-between items-start">
+                                    <div class="flex-1">
+                                        <div class="text-sm font-medium text-gray-900">
+                                            #${incident.id} - ${incident.category}
+                                        </div>
+                                        <div class="text-xs text-gray-600 mt-1">
+                                            ${incident.description}
+                                        </div>
+                                    </div>
+                                    <span class="text-xs px-2 py-1 bg-orange-100 text-orange-800 rounded">
+                                        ${incident.severity}
+                                    </span>
+                                </div>
+                                <button class="mt-2 text-xs text-purple-600 hover:text-purple-800 font-semibold">
+                                    🤖 Ver Recomendación IA →
+                                </button>
+                            </div>
+                        `).join('')}
+                    </div>
+                `;
+                container.appendChild(div);
+            });
+        }
+
+        function loadTeam() {
+            const container = document.getElementById('teamContainer');
+            
+            if (mockData.teamEmployees.length === 0) {
+                container.innerHTML = `
+                    <div class="text-center py-8 text-gray-500">
+                        No hay empleados asignados
+                    </div>
+                `;
+                return;
+            }
+
+            container.innerHTML = '';
+            mockData.teamEmployees.forEach(employee => {
+                const statusColor = getStatusColor(employee.status);
+                const statusBadge = getStatusBadge(employee.status);
+                
+                const div = document.createElement('div');
+                div.className = 'border border-gray-200 rounded-lg p-4 hover:shadow-md transition';
+                div.innerHTML = `
+                    <div class="flex items-start justify-between mb-2">
+                        <div class="flex items-center space-x-3">
+                            <div class="w-3 h-3 rounded-full ${statusColor}"></div>
+                            <div>
+                                <div class="font-semibold text-gray-900">${employee.full_name}</div>
+                                <div class="text-xs text-gray-500">${employee.employee_code}</div>
+                            </div>
+                        </div>
+                        <span class="px-2 py-1 rounded text-xs font-semibold ${statusBadge}">
+                            ${employee.status}
+                        </span>
+                    </div>
+
+                    ${employee.current_station ? `
+                        <div class="text-sm text-gray-600 mb-2">
+                            📍 ${employee.current_station.name} - ${employee.current_station.line}
+                        </div>
+                    ` : ''}
+
+                    ${employee.location ? `
+                        <div class="text-xs text-gray-500">
+                            GPS: ${employee.location.latitude.toFixed(4)}, ${employee.location.longitude.toFixed(4)}
+                            ${employee.last_update ? `
+                                <span class="ml-2">
+                                    • ${new Date(employee.last_update).toLocaleTimeString('es-MX')}
+                                </span>
+                            ` : ''}
+                        </div>
+                    ` : ''}
+                `;
+                container.appendChild(div);
+            });
+        }
+
+        function getRecommendations(incidentId) {
+            document.getElementById('selectedIncidentId').textContent = incidentId;
+            
+            // Mock recommendations
+            const mockRecommendations = [
+                {
+                    employee_id: 1,
+                    employee_name: 'Juan Pérez',
+                    employee_code: 'EMP-001',
+                    recommendation_score: 92.5,
+                    distance_km: 0.5,
+                    eta_minutes: 8,
+                    status: 'available',
+                    recommendation: 'Mejor opción: Más cercano, disponible inmediatamente y sin carga de trabajo actual'
+                },
+                {
+                    employee_id: 2,
+                    employee_name: 'María García',
+                    employee_code: 'EMP-002',
+                    recommendation_score: 78.3,
+                    distance_km: 2.1,
+                    eta_minutes: 15,
+                    status: 'available',
+                    recommendation: 'Segunda opción: Disponible pero ubicado a mayor distancia'
+                },
+                {
+                    employee_id: 3,
+                    employee_name: 'Carlos López',
+                    employee_code: 'EMP-003',
+                    recommendation_score: 45.0,
+                    distance_km: 1.2,
+                    eta_minutes: 20,
+                    status: 'busy',
+                    recommendation: 'No recomendado: Actualmente ocupado con otro incidente'
+                }
+            ];
+
+            displayRecommendations(mockRecommendations);
+        }
+
+        function displayRecommendations(recommendations) {
+            const section = document.getElementById('recommendationsSection');
+            const container = document.getElementById('recommendationsContainer');
+            
+            section.classList.remove('hidden');
+            container.innerHTML = '';
+
+            recommendations.forEach((rec, idx) => {
+                const scoreColor = getScoreColor(rec.recommendation_score);
+                const borderClass = idx === 0 ? 'border-green-400 shadow-lg' : 'border-gray-200';
+                
+                const div = document.createElement('div');
+                div.className = `bg-white rounded-lg p-5 border-2 ${borderClass}`;
+                div.innerHTML = `
+                    <div class="flex justify-between items-start mb-3">
+                        <div>
+                            <div class="flex items-center space-x-2 mb-1">
+                                ${idx === 0 ? '<span class="text-2xl">⭐</span>' : ''}
+                                <h3 class="text-lg font-bold text-gray-900">
+                                    ${rec.employee_name}
+                                </h3>
+                            </div>
+                            <div class="text-sm text-gray-600">${rec.employee_code}</div>
+                        </div>
+                        <div class="text-right">
+                            <div class="text-3xl font-bold ${scoreColor}">
+                                ${rec.recommendation_score.toFixed(1)}
+                            </div>
+                            <div class="text-xs text-gray-500">Score</div>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-3 gap-4 mb-3">
+                        <div>
+                            <div class="text-xs text-gray-500">Distancia</div>
+                            <div class="font-semibold text-gray-900">${rec.distance_km} km</div>
+                        </div>
+                        <div>
+                            <div class="text-xs text-gray-500">ETA</div>
+                            <div class="font-semibold text-gray-900">${rec.eta_minutes} min</div>
+                        </div>
+                        <div>
+                            <div class="text-xs text-gray-500">Estado</div>
+                            <div class="font-semibold ${rec.status === 'available' ? 'text-green-600' : rec.status === 'busy' ? 'text-yellow-600' : 'text-gray-600'}">
+                                ${rec.status}
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="text-sm font-medium p-3 rounded ${
+                        idx === 0 ? 'bg-green-50 text-green-900' :
+                        rec.recommendation_score >= 60 ? 'bg-blue-50 text-blue-900' :
+                        'bg-gray-50 text-gray-700'
+                    }">
+                        ${rec.recommendation}
+                    </div>
+
+                    ${idx === 0 ? `
+                        <button onclick="assignEmployee(${rec.employee_id})" class="mt-3 w-full px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition font-semibold">
+                            ✓ Asignar a ${rec.employee_name}
+                        </button>
+                    ` : ''}
+                `;
+                container.appendChild(div);
+            });
+
+            // Scroll to recommendations
+            section.scrollIntoView({ behavior: 'smooth' });
+        }
+
+        function assignEmployee(employeeId) {
+            alert(`Empleado #${employeeId} asignado correctamente`);
+            document.getElementById('recommendationsSection').classList.add('hidden');
+        }
+
+        function getStatusColor(status) {
+            const colors = {
+                'available': 'bg-green-500',
+                'busy': 'bg-yellow-500',
+                'offline': 'bg-gray-400'
+            };
+            return colors[status] || 'bg-gray-400';
+        }
+
+        function getStatusBadge(status) {
+            const badges = {
+                'available': 'bg-green-100 text-green-800',
+                'busy': 'bg-yellow-100 text-yellow-800',
+                'offline': 'bg-gray-100 text-gray-800'
+            };
+            return badges[status] || 'bg-gray-100 text-gray-800';
+        }
+
+        function getScoreColor(score) {
+            if (score >= 80) return 'text-green-600';
+            if (score >= 60) return 'text-blue-600';
+            if (score >= 40) return 'text-yellow-600';
+            return 'text-red-600';
+        }
+    </script>
+</body>
+</html>

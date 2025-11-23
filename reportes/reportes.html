@@ -1,0 +1,375 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Sistema de Reportes Metro</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
+    <style>
+        /* --- ESTILOS GENERALES --- */
+        body { font-family: 'Segoe UI', sans-serif; background-color: #eef2f5; padding: 20px; display: flex; gap: 20px; }
+        
+        .sidebar {
+            width: 280px; background: white; padding: 25px; border-radius: 12px; 
+            box-shadow: 0 5px 15px rgba(0,0,0,0.05); height: fit-content;
+        }
+        .logo-area { text-align: center; margin-bottom: 20px; color: #ff6b00; font-weight: 900; font-size: 22px; }
+        
+        label { display: block; font-weight: 600; margin-bottom: 5px; color: #444; font-size: 14px; }
+        input[type="text"], input[type="date"], input[type="datetime-local"], input[type="email"], select { width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 6px; margin-bottom: 15px; box-sizing: border-box; }
+        
+        .checklist-container {
+            max-height: 200px; overflow-y: auto; border: 1px solid #ddd; border-radius: 6px; padding: 10px; margin-bottom: 15px; background: #fafafa;
+        }
+        .check-item { display: flex; align-items: center; margin-bottom: 5px; font-size: 13px; color: #555; }
+        .check-item input { margin-right: 8px; width: auto; cursor: pointer; } 
+        
+        .btn { width: 100%; padding: 12px; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; transition: 0.2s; text-align: center; display: block; box-sizing: border-box; }
+        .btn-buscar { background-color: #000; color: white; }
+        .btn-buscar:hover { background-color: #333; }
+        .btn-pdf { background-color: #ff6b00; color: white; margin-top: 10px; }
+        .btn-pdf:hover { background-color: #e65c00; }
+        
+        /* BOTÓN AUTOMATIZAR */
+        .btn-auto { background-color: #28a745; color: white; margin-top: 10px; }
+        .btn-auto:hover { background-color: #218838; }
+
+        /* --- ESTILOS DEL MODAL --- */
+        .modal-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.5); display: none; justify-content: center; align-items: center; z-index: 1000;
+        }
+        .modal-content {
+            background: white; padding: 30px; border-radius: 12px; width: 500px; max-height: 90vh; overflow-y: auto;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.2); position: relative;
+        }
+        .close-modal { position: absolute; top: 15px; right: 20px; font-size: 24px; cursor: pointer; color: #999; }
+        
+        .auto-item { background: #f8f9fa; border: 1px solid #eee; padding: 10px; margin-bottom: 10px; border-radius: 6px; font-size: 13px; display: flex; justify-content: space-between; align-items: center; }
+        .btn-del { background: #dc3545; color: white; padding: 5px 10px; border: none; border-radius: 4px; cursor: pointer; font-size: 11px; }
+
+        /* PREVIEW AREA & PDF */
+        .preview-area { flex-grow: 1; display: flex; justify-content: center; overflow-y: auto; }
+        #documento { background: white; width: 100%; max-width: 780px; min-height: 1000px; padding: 30px; box-shadow: 0 0 20px rgba(0,0,0,0.1); color: #333; box-sizing: border-box; }
+        .pdf-header { display: flex; justify-content: space-between; border-bottom: 4px solid #ff6b00; padding-bottom: 20px; margin-bottom: 30px; }
+        .pdf-title h1 { margin: 0; font-size: 24px; text-transform: uppercase; }
+        .pdf-meta { text-align: right; font-size: 12px; color: #666; }
+        .resumen-box { background: #f8f9fa; padding: 15px; border-radius: 8px; margin-bottom: 25px; display: flex; justify-content: space-between; font-size: 13px; align-items: center; }
+        .charts-row { display: flex; gap: 20px; margin-bottom: 30px; page-break-inside: avoid; }
+        .chart-container { flex: 1; border: 1px solid #eee; border-radius: 8px; padding: 10px; height: 250px; }
+        .chart-title { font-size: 14px; font-weight: bold; color: #555; text-align: center; margin-bottom: 5px; }
+        table { width: 100%; border-collapse: collapse; font-size: 12px; }
+        th { background-color: #333; color: white; padding: 10px; text-align: left; }
+        tr { page-break-inside: avoid; page-break-after: auto; }
+        td { border-bottom: 1px solid #eee; padding: 8px; vertical-align: top; }
+    </style>
+</head>
+<body>
+
+    <div class="sidebar">
+        <div class="logo-area">METRO DATA</div>
+        
+        <label>Usuario / Analista:</label>
+        <input type="text" id="inpNombre" placeholder="Tu nombre...">
+        <hr style="border-top:1px solid #eee; margin: 15px 0;">
+
+        <label>Línea:</label>
+        <select id="inpLinea" onchange="cargarEstaciones()">
+            <option value="">Todas las líneas</option>
+        </select>
+
+        <label>Estación:</label>
+        <select id="inpEstacion" disabled>
+            <option value="">Todas las estaciones</option>
+        </select>
+
+        <label>Categorías:</label>
+        <div class="checklist-container" id="listaCategorias">
+            <div class="check-item"><input type="checkbox" value="Trabajadores"> Trabajadores</div>
+            <div class="check-item"><input type="checkbox" value="Consultas/Dudas"> Consultas/Dudas</div>
+            <div class="check-item"><input type="checkbox" value="Sugerencias"> Sugerencias</div>
+            <div class="check-item"><input type="checkbox" value="Retrasos"> Retrasos</div>
+            <div class="check-item"><input type="checkbox" value="Asientos reservados"> Asientos reservados</div>
+            <div class="check-item"><input type="checkbox" value="Fallas Técnicas"> Fallas Técnicas</div>
+            <div class="check-item"><input type="checkbox" value="Mantenimiento/Limpieza"> Mantenimiento/Limpieza</div>
+            <div class="check-item"><input type="checkbox" value="Accesibilidad"> Accesibilidad</div>
+            <div class="check-item"><input type="checkbox" value="Cancelaciones"> Cancelaciones</div>
+            <div class="check-item"><input type="checkbox" value="Información/Comunicación"> Información/Comunicación</div>
+            <div class="check-item"><input type="checkbox" value="Seguridad"> Seguridad</div>
+            <div class="check-item"><input type="checkbox" value="Trato del Personal"> Trato del Personal</div>
+            <div class="check-item"><input type="checkbox" value="Espacio/Capacidad"> Espacio/Capacidad</div>
+            <div class="check-item"><input type="checkbox" value="Reembolso"> Reembolso</div>
+        </div>
+
+        <label>Desde:</label>
+        <input type="date" id="inpInicio">
+        <label>Hasta:</label>
+        <input type="date" id="inpFin">
+
+        <button class="btn btn-buscar" onclick="procesarTodo()">Actualizar Reporte</button>
+        <button class="btn btn-pdf" onclick="descargar()">Descargar PDF</button>
+        
+        <button class="btn btn-auto" onclick="abrirModal()">⚡ Automatizar Reporte</button>
+    </div>
+
+    <div class="preview-area">
+        <div id="documento">
+            <div class="pdf-header">
+                <div class="pdf-title">
+                    <h1>Reporte de Incidencias</h1>
+                    <span style="font-size:14px; color:#666;">Sistema de Atención al Usuario</span>
+                </div>
+                <div class="pdf-meta">Fecha: <span id="outFechaHoy"></span><br>ID: #DOC-2025-Y</div>
+            </div>
+            <div class="resumen-box">
+                <div>
+                    <strong>Generado por:</strong> <span id="outNombre">Pendiente</span><br>
+                    <strong>Filtros:</strong> <span id="outFiltros">Ninguno</span>
+                </div>
+                <div>
+                    <span style="font-size:12px; color:#666; display:block; text-align:right;">Total Reportes</span>
+                    <span id="kpiTotal" style="font-size: 24px; color:#ff6b00; font-weight:bold;">0</span>
+                </div>
+            </div>
+            <div id="seccionGraficos" class="charts-row">
+                <div class="chart-container">
+                    <div id="tituloBarra" class="chart-title">Estadísticas</div>
+                    <div style="height: 220px; width: 100%;"><canvas id="graficoBarras"></canvas></div>
+                </div>
+                <div class="chart-container">
+                    <div class="chart-title">Sentimiento / Opinión</div>
+                    <div style="height: 220px; width: 100%;"><canvas id="graficoPastel"></canvas></div>
+                </div>
+            </div>
+            <table id="tablaResultados">
+                <thead>
+                    <tr><th width="12%">Fecha</th><th width="15%">Ubicación</th><th width="15%">Categoría</th><th width="45%">Detalle</th><th width="13%">Opinión</th></tr>
+                </thead>
+                <tbody><tr><td colspan="5" style="text-align:center; padding:30px;">Cargando...</td></tr></tbody>
+            </table>
+            <div style="margin-top: 40px; border-top: 1px solid #ccc; padding-top: 10px; font-size: 10px; color: #999; text-align: center;">Confidencial - Uso interno STC Metro.</div>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="modalAuto">
+        <div class="modal-content">
+            <span class="close-modal" onclick="cerrarModal()">&times;</span>
+            <h2 style="margin-top:0; color:#28a745;">Automatizar Envío</h2>
+            <p style="font-size:13px; color:#666;">Se guardará la configuración actual de filtros (Línea, Estación, Categorías) como plantilla.</p>
+            
+            <label>Correo Electrónico:</label>
+            <input type="email" id="autoEmail" placeholder="ejemplo@metro.cdmx.gob.mx">
+            
+            <label>Fecha y Hora de Inicio:</label>
+            <input type="datetime-local" id="autoInicio">
+            
+            <label>Frecuencia:</label>
+            <select id="autoFrecuencia">
+                <option value="diaria">Diaria</option>
+                <option value="semanal">Semanal</option>
+                <option value="mensual">Mensual</option>
+            </select>
+
+            <button class="btn btn-auto" onclick="guardarAutomatizacion()">Guardar Automatización</button>
+
+            <hr style="margin: 20px 0; border-top: 1px solid #eee;">
+            
+            <h3 style="font-size:16px;">Automatizaciones Activas</h3>
+            <div id="listaAutomatizaciones">
+                </div>
+        </div>
+    </div>
+
+    <script>
+        // --- LOGICA ORIGINAL DEL DASHBOARD ---
+        const datosMetro = {
+            "Línea 1": ["Observatorio", "Tacubaya", "Juanacatlán", "Chapultepec", "Sevilla", "Insurgentes", "Cuauhtémoc", "Balderas", "Salto del Agua", "Isabel la Católica", "Pino Suárez", "Merced", "Candelaria", "San Lázaro", "Moctezuma", "Balbuena", "Boulevard Puerto Aéreo", "Gómez Farías", "Zaragoza", "Pantitlán"],
+            "Línea 2": ["Cuatro Caminos", "Panteones", "Tacuba", "Cuitláhuac", "Popotla", "Colegio Militar", "Normal", "San Cosme", "Revolución", "Hidalgo", "Bellas Artes", "Allende", "Zócalo", "Pino Suárez", "San Antonio Abad", "Chabacano", "Viaducto", "Xola", "Villa de Cortés", "Nativitas", "Portales", "Ermita", "General Anaya", "Tasqueña"],
+            "Línea 3": ["Indios Verdes", "Deportivo 18 de Marzo", "Potrero", "La Raza", "Tlatelolco", "Guerrero", "Hidalgo", "Juárez", "Balderas", "Niños Héroes", "Hospital General", "Centro Médico", "Etiopía", "Eugenia", "División del Norte", "Zapata", "Coyoacán", "Viveros", "Miguel Ángel de Quevedo", "Copilco", "Universidad"],
+            "Línea 4": ["Martín Carrera", "Talismán", "Bondojito", "Consulado", "Canal del Norte", "Morelos", "Candelaria", "Fray Servando", "Jamaica", "Santa Anita"],
+            "Línea 5": ["Politécnico", "Instituto del Petróleo", "Autobuses del Norte", "La Raza", "Misterios", "Valle Gómez", "Consulado", "Eduardo Molina", "Aragón", "Oceanía", "Terminal Aérea", "Hangares", "Pantitlán"],
+            "Línea 6": ["El Rosario", "Tezozómoc", "Azcapotzalco", "Ferrería", "Norte 45", "Vallejo", "Instituto del Petróleo", "Lindavista", "Deportivo 18 de Marzo", "La Villa-Basílica", "Martín Carrera"],
+            "Línea 7": ["El Rosario", "Aquiles Serdán", "Camarones", "Refinería", "Tacuba", "San Joaquín", "Polanco", "Auditorio", "Constituyentes", "Tacubaya", "San Pedro de los Pinos", "San Antonio", "Mixcoac", "Barranca del Muerto"],
+            "Línea 8": ["Garibaldi/Lagunilla", "Bellas Artes", "San Juan de Letrán", "Salto del Agua", "Doctores", "Obrera", "Chabacano", "La Viga", "Santa Anita", "Coyuya", "Iztacalco", "Apatlaco", "Aculco", "Escuadrón 201", "Atlalilco", "Iztapalapa", "Cerro de la Estrella", "UAM-I", "Constitución de 1917"],
+            "Línea 9": ["Tacubaya", "Patriotismo", "Chilpancingo", "Centro Médico", "Lázaro Cárdenas", "Chabacano", "Jamaica", "Mixiuhca", "Velódromo", "Ciudad Deportiva", "Puebla", "Pantitlán"],
+            "Línea 12": ["Mixcoac", "Insurgentes Sur", "Hospital 20 de Noviembre", "Zapata", "Parque de los Venados", "Eje Central", "Ermita", "Mexicaltzingo", "Atlalilco", "Culhuacán", "San Andrés Tomatlán", "Lomas Estrella", "Calle 11", "Periférico Oriente", "Tezonco", "Olivos", "Nopalera", "Zapotitlán", "Tlaltenco", "Tláhuac"],
+            "Línea A": ["Pantitlán", "Agrícola Oriental", "Canal de San Juan", "Tepalcates", "Guelatao", "Peñón Viejo", "Acatitla", "Santa Marta", "Los Reyes", "La Paz"],
+            "Línea B": ["Ciudad Azteca", "Plaza Aragón", "Olímpica", "Ecatepec", "Múzquiz", "Río de los Remedios", "Impulsora", "Nezahualcóyotl", "Villa de Aragón", "Bosque de Aragón", "Deportivo Oceanía", "Oceanía", "Romero Rubio", "R. Flores Magón", "San Lázaro", "Morelos", "Tepito", "Lagunilla", "Garibaldi/Lagunilla", "Guerrero", "Buenavista"]
+        };
+        const coloresLineas = { "Línea 1": "#F04E98", "Línea 2": "#0057B8", "Línea 3": "#6B8C21", "Línea 4": "#66C0AD", "Línea 5": "#FFCD00", "Línea 6": "#DB2322", "Línea 7": "#F37620", "Línea 8": "#009A44", "Línea 9": "#55391C", "Línea 12": "#C59C38", "Línea A": "#9B268E", "Línea B": "#B0B3B2" };
+        let chartBarras = null; let chartPastel = null;
+
+        window.onload = function() {
+            document.getElementById('outFechaHoy').innerText = new Date().toLocaleDateString('es-MX');
+            const selectLinea = document.getElementById('inpLinea');
+            const lineas = Object.keys(datosMetro).sort((a,b) => a.localeCompare(b, undefined, { numeric: true, sensitivity: 'base' }));
+            lineas.forEach(l => { const opt = document.createElement("option"); opt.value=l; opt.text=l; selectLinea.appendChild(opt); });
+            
+            // IMPORTANTE: Cargar datos iniciales
+            procesarTodo();
+        };
+
+        function cargarEstaciones() {
+            const linea = document.getElementById('inpLinea').value;
+            const selEst = document.getElementById('inpEstacion');
+            selEst.innerHTML = '<option value="">Todas las estaciones</option>';
+            if (linea && datosMetro[linea]) { selEst.disabled = false; datosMetro[linea].forEach(e => { const opt = document.createElement("option"); opt.value=e; opt.text=e; selEst.appendChild(opt); }); } else { selEst.disabled = true; }
+        }
+
+        function construirURL(baseUrl) {
+            const linea = document.getElementById('inpLinea').value;
+            const estacion = document.getElementById('inpEstacion').value;
+            const inicio = document.getElementById('inpInicio').value;
+            const fin = document.getElementById('inpFin').value;
+            const checkboxes = document.querySelectorAll('#listaCategorias input:checked');
+            const params = new URLSearchParams();
+            if(linea) params.append('linea', linea);
+            if(estacion) params.append('estacion', estacion);
+            if(inicio) params.append('fecha_inicio', inicio);
+            if(fin) params.append('fecha_fin', fin);
+            checkboxes.forEach(chk => { params.append('categorias', chk.value); });
+            return `${baseUrl}?${params.toString()}`;
+        }
+
+        function procesarTodo() { cargarTabla(); actualizarDashboard(); }
+
+        async function cargarTabla() {
+            document.getElementById('outNombre').innerText = document.getElementById('inpNombre').value || "Usuario General";
+            const url = construirURL('http://localhost:5000/api/reporte');
+            try {
+                const res = await fetch(url);
+                const data = await res.json();
+                const tbody = document.querySelector('#tablaResultados tbody');
+                tbody.innerHTML = "";
+                if(data.length === 0) { tbody.innerHTML = '<tr><td colspan="5" style="text-align:center; padding:20px;">Sin resultados</td></tr>'; return; }
+                data.forEach(d => { tbody.innerHTML += `<tr><td>${d.fecha}</td><td>${d.linea}<br><small style="color:#777">${d.estacion}</small></td><td><span style="background:#eee; padding:2px 6px; border-radius:4px; font-weight:bold;">${d.categoria}</span></td><td><b>${d.asunto}</b><br><small>De: ${d.nombre}</small></td><td>${d.opinion}</td></tr>`; });
+            } catch(e) { console.error(e); }
+        }
+
+        async function actualizarDashboard() {
+            const url = construirURL('http://localhost:5000/api/dashboard');
+            const lineaSel = document.getElementById('inpLinea').value;
+            try {
+                const res = await fetch(url);
+                const data = await res.json();
+                document.getElementById('kpiTotal').innerText = data.total;
+                document.getElementById('tituloBarra').innerText = data.titulo_grafico;
+                
+                const labels = data.grafico_principal.labels;
+                const values = data.grafico_principal.data;
+                let bgColors = lineaSel ? Array(values.length).fill(coloresLineas[lineaSel]||'#ff6b00') : labels.map(l => coloresLineas[l]||'#ff6b00');
+
+                const ctxB = document.getElementById('graficoBarras').getContext('2d');
+                if(chartBarras) chartBarras.destroy();
+                chartBarras = new Chart(ctxB, { type: 'bar', data: { labels: labels, datasets: [{ label: 'Incidentes', data: values, backgroundColor: bgColors, borderRadius: 4 }] }, options: { responsive: true, maintainAspectRatio: false, animation: { duration: 0 }, plugins: { legend: { display: false } } } });
+
+                const ctxP = document.getElementById('graficoPastel').getContext('2d');
+                if(chartPastel) chartPastel.destroy();
+                chartPastel = new Chart(ctxP, { type: 'doughnut', data: { labels: data.por_opinion.labels, datasets: [{ data: data.por_opinion.data, backgroundColor: ['#28a745', '#dc3545', '#ffc107', '#17a2b8', '#6c757d'] }] }, options: { responsive: true, maintainAspectRatio: false, animation: { duration: 0 }, plugins: { legend: { position: 'bottom', labels: { boxWidth: 10, font: { size: 10 } } } } } });
+            } catch(e) { console.error(e); }
+        }
+
+        function descargar() {
+            const element = document.getElementById('documento');
+            const nombre = document.getElementById('inpNombre').value || "Metro";
+            const opt = { margin: 0.4, filename: `Reporte_${nombre}.pdf`, image: { type: 'jpeg', quality: 0.98 }, html2canvas: { scale: 2, useCORS: true, scrollY: 0 }, jsPDF: { unit: 'in', format: 'letter', orientation: 'portrait' }, pagebreak: { mode: ['avoid-all', 'css', 'legacy'] } };
+            html2pdf().set(opt).from(element).save();
+        }
+
+        // --- NUEVA LÓGICA DE AUTOMATIZACIÓN ---
+        
+        function abrirModal() {
+            document.getElementById('modalAuto').style.display = 'flex';
+            cargarAutomatizaciones();
+        }
+        function cerrarModal() {
+            document.getElementById('modalAuto').style.display = 'none';
+        }
+
+        async function guardarAutomatizacion() {
+            const email = document.getElementById('autoEmail').value;
+            const inicio = document.getElementById('autoInicio').value;
+            const frecuencia = document.getElementById('autoFrecuencia').value;
+
+            if(!email || !inicio) { alert("Por favor llena el correo y la fecha."); return; }
+
+            // 1. CAPTURAR ESTADO ACTUAL (PLANTILLA)
+            const linea = document.getElementById('inpLinea').value;
+            const estacion = document.getElementById('inpEstacion').value;
+            // Capturamos las categorías marcadas
+            const categorias = [];
+            document.querySelectorAll('#listaCategorias input:checked').forEach(c => categorias.push(c.value));
+
+            const payload = {
+                email: email,
+                fecha_inicio: inicio,
+                frecuencia: frecuencia,
+                filtros: {
+                    linea: linea,
+                    estacion: estacion,
+                    categorias: categorias
+                }
+            };
+
+            // 2. ENVIAR AL BACKEND
+            try {
+                const res = await fetch('http://localhost:5000/api/automatizacion', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify(payload)
+                });
+                const data = await res.json();
+                if(data.id) {
+                    alert("Automatización guardada correctamente.");
+                    cargarAutomatizaciones();
+                } else {
+                    alert("Error al guardar.");
+                }
+            } catch(e) { console.error(e); alert("Error de conexión"); }
+        }
+
+        async function cargarAutomatizaciones() {
+            try {
+                const res = await fetch('http://localhost:5000/api/automatizacion');
+                const lista = await res.json();
+                const contenedor = document.getElementById('listaAutomatizaciones');
+                contenedor.innerHTML = "";
+
+                if(lista.length === 0) {
+                    contenedor.innerHTML = "<p style='color:#999; text-align:center;'>No hay automatizaciones activas.</p>";
+                    return;
+                }
+
+                lista.forEach(item => {
+                    // Crear descripción breve de filtros
+                    let descFiltros = item.filtros.linea || "Global";
+                    if(item.filtros.estacion) descFiltros += ` - ${item.filtros.estacion}`;
+                    
+                    contenedor.innerHTML += `
+                        <div class="auto-item">
+                            <div>
+                                <strong>${item.frecuencia.toUpperCase()}</strong> - ${item.email}<br>
+                                <span style="color:#666;">Inicio: ${item.fecha_inicio.replace('T', ' ')}</span><br>
+                                <span style="color:#888; font-size:11px;">Filtros: ${descFiltros}</span>
+                            </div>
+                            <div>
+                                <button class="btn-del" onclick="borrarAutomatizacion(${item.id})">Borrar</button>
+                            </div>
+                        </div>
+                    `;
+                });
+            } catch(e) { console.error(e); }
+        }
+
+        async function borrarAutomatizacion(id) {
+            if(!confirm("¿Seguro que deseas eliminar esta automatización?")) return;
+            
+            try {
+                await fetch(`http://localhost:5000/api/automatizacion/${id}`, { method: 'DELETE' });
+                cargarAutomatizaciones();
+            } catch(e) { console.error(e); }
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,351 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Panel de Empleado - Metro CDMX</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'metro-blue': '#0066CC'
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="min-h-screen bg-gray-100">
+    <!-- Header -->
+    <header class="bg-metro-blue text-white shadow-lg">
+        <div class="max-w-7xl mx-auto px-4 py-4 flex justify-between items-center">
+            <div>
+                <h1 class="text-2xl font-bold">👷 Panel de Empleado</h1>
+                <p class="text-blue-100"><span id="employeeName">Empleado</span> - <span id="employeeCode">EMP-001</span></p>
+            </div>
+            <button
+                onclick="handleLogout()"
+                class="px-4 py-2 bg-white text-metro-blue rounded-lg hover:bg-gray-100 transition"
+            >
+                Cerrar Sesión
+            </button>
+        </div>
+    </header>
+
+    <main class="max-w-7xl mx-auto px-4 py-8">
+        <!-- Mi Estado -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+            <!-- Estado Actual -->
+            <div class="bg-white rounded-lg shadow-lg p-6">
+                <h2 class="text-xl font-bold text-gray-900 mb-4">⚡ Mi Estado</h2>
+
+                <div class="mb-6">
+                    <div class="flex items-center justify-between mb-2">
+                        <span class="text-gray-700 font-medium">Estado Actual:</span>
+                        <span id="currentStatus" class="px-4 py-2 rounded-full text-sm font-semibold bg-green-100 text-green-800">
+                            DISPONIBLE
+                        </span>
+                    </div>
+
+                    <div class="text-sm text-gray-600 mt-2" id="currentStation">
+                        📍 Estación: Pino Suárez - Línea 1
+                    </div>
+                </div>
+
+                <div class="space-y-2">
+                    <div class="font-semibold text-gray-700 mb-3">Cambiar Estado:</div>
+                    <button
+                        onclick="changeStatus('available')"
+                        class="w-full px-4 py-3 bg-green-500 text-white rounded-lg hover:bg-green-600 transition font-semibold"
+                    >
+                        ✅ Disponible
+                    </button>
+                    <button
+                        onclick="changeStatus('busy')"
+                        class="w-full px-4 py-3 bg-yellow-500 text-white rounded-lg hover:bg-yellow-600 transition font-semibold"
+                    >
+                        ⏱️ Ocupado
+                    </button>
+                    <button
+                        onclick="changeStatus('offline')"
+                        class="w-full px-4 py-3 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition font-semibold"
+                    >
+                        🔌 Fuera de Servicio
+                    </button>
+                </div>
+            </div>
+
+            <!-- Tracking GPS -->
+            <div class="bg-white rounded-lg shadow-lg p-6">
+                <h2 class="text-xl font-bold text-gray-900 mb-4">📍 Tracking GPS</h2>
+
+                <div class="mb-4">
+                    <div id="locationStatus" class="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+                        <div class="text-yellow-900">⚠️ Sin ubicación registrada</div>
+                    </div>
+                </div>
+
+                <div class="space-y-3">
+                    <button
+                        id="trackingButton"
+                        onclick="toggleTracking()"
+                        class="w-full px-4 py-3 bg-metro-blue text-white rounded-lg hover:bg-blue-700 font-semibold transition"
+                    >
+                        ▶️ Iniciar Tracking GPS
+                    </button>
+
+                    <div id="trackingActiveMessage" class="bg-blue-50 border border-blue-200 rounded-lg p-3 hidden">
+                        <div class="text-sm text-blue-900">
+                            🔄 Tracking activo - Tu ubicación se envía automáticamente cada 5 segundos
+                        </div>
+                    </div>
+
+                    <div id="locationError" class="bg-red-50 border border-red-200 rounded-lg p-3 hidden">
+                        <div class="text-sm text-red-900"></div>
+                    </div>
+                </div>
+
+                <div class="mt-4 text-xs text-gray-500">
+                    💡 El tracking GPS permite que tu jefe de área vea tu ubicación en tiempo real y te asigne incidentes cercanos.
+                </div>
+            </div>
+        </div>
+
+        <!-- Incidentes Asignados -->
+        <div class="bg-white rounded-lg shadow-lg p-6">
+            <h2 class="text-xl font-bold text-gray-900 mb-4">📋 Mis Incidentes Asignados</h2>
+
+            <div id="incidentsContainer">
+                <!-- Se cargan dinámicamente -->
+            </div>
+        </div>
+    </main>
+
+    <script>
+        let trackingActive = false;
+        let watchId = null;
+        let currentLocation = null;
+
+        // Mock data de incidentes
+        const mockIncidents = [
+            {
+                id: 1,
+                severity: 'high',
+                category: 'Falla Técnica',
+                description: 'Torniquete #3 no registra pagos correctamente',
+                station_id: 5,
+                status: 'in_progress',
+                created_at: new Date().toISOString(),
+                sentiment: 'negative',
+                priority_score: 85
+            },
+            {
+                id: 2,
+                severity: 'medium',
+                category: 'Limpieza',
+                description: 'Requiere limpieza profunda en andén principal',
+                station_id: 5,
+                status: 'pending',
+                created_at: new Date(Date.now() - 3600000).toISOString(),
+                sentiment: 'neutral',
+                priority_score: 60
+            }
+        ];
+
+        document.addEventListener('DOMContentLoaded', function() {
+            loadIncidents();
+        });
+
+        function loadIncidents() {
+            const container = document.getElementById('incidentsContainer');
+            
+            if (mockIncidents.length === 0) {
+                container.innerHTML = `
+                    <div class="text-center py-8 text-gray-500">
+                        No tienes incidentes asignados actualmente
+                    </div>
+                `;
+                return;
+            }
+
+            container.innerHTML = '';
+            mockIncidents.forEach(incident => {
+                const severityColor = getSeverityColor(incident.severity);
+                const statusColor = getStatusColor(incident.status);
+                
+                const div = document.createElement('div');
+                div.className = 'border border-gray-200 rounded-lg p-4 hover:shadow-md transition mb-4';
+                div.innerHTML = `
+                    <div class="flex justify-between items-start mb-3">
+                        <div>
+                            <div class="flex items-center space-x-2 mb-2">
+                                <span class="px-3 py-1 rounded-full text-xs font-semibold ${severityColor}">
+                                    ${incident.severity.toUpperCase()}
+                                </span>
+                                <span class="px-3 py-1 bg-gray-100 text-gray-700 rounded-full text-xs">
+                                    ${incident.category}
+                                </span>
+                            </div>
+                            <h3 class="font-semibold text-gray-900">Incidente #${incident.id}</h3>
+                        </div>
+                        <div class="text-sm text-gray-500">
+                            ${new Date(incident.created_at).toLocaleString('es-MX')}
+                        </div>
+                    </div>
+
+                    <p class="text-gray-700 mb-3">${incident.description}</p>
+
+                    <div class="flex justify-between items-center">
+                        <div class="text-sm text-gray-600">
+                            📍 Estación #${incident.station_id}
+                        </div>
+                        <div class="flex space-x-2">
+                            <span class="px-3 py-1 rounded-full text-xs ${statusColor}">
+                                ${incident.status}
+                            </span>
+                        </div>
+                    </div>
+
+                    ${incident.sentiment ? `
+                        <div class="mt-3 text-xs text-gray-500">
+                            Sentimiento: ${incident.sentiment} • Prioridad: ${incident.priority_score}
+                        </div>
+                    ` : ''}
+                `;
+                container.appendChild(div);
+            });
+        }
+
+        function changeStatus(newStatus) {
+            const statusElement = document.getElementById('currentStatus');
+            const statusColors = {
+                'available': 'bg-green-100 text-green-800',
+                'busy': 'bg-yellow-100 text-yellow-800',
+                'offline': 'bg-gray-100 text-gray-800'
+            };
+            const statusText = {
+                'available': 'DISPONIBLE',
+                'busy': 'OCUPADO',
+                'offline': 'FUERA DE SERVICIO'
+            };
+
+            statusElement.className = `px-4 py-2 rounded-full text-sm font-semibold ${statusColors[newStatus]}`;
+            statusElement.textContent = statusText[newStatus];
+
+            alert(`Estado cambiado a: ${statusText[newStatus]}`);
+        }
+
+        function toggleTracking() {
+            if (trackingActive) {
+                stopTracking();
+            } else {
+                startTracking();
+            }
+        }
+
+        function startTracking() {
+            if (!navigator.geolocation) {
+                showError('Tu navegador no soporta geolocalización');
+                return;
+            }
+
+            const button = document.getElementById('trackingButton');
+            button.className = 'w-full px-4 py-3 bg-red-500 text-white rounded-lg hover:bg-red-600 font-semibold transition';
+            button.textContent = '🛑 Detener Tracking';
+
+            document.getElementById('trackingActiveMessage').classList.remove('hidden');
+            hideError();
+
+            watchId = navigator.geolocation.watchPosition(
+                (position) => {
+                    currentLocation = {
+                        latitude: position.coords.latitude,
+                        longitude: position.coords.longitude
+                    };
+                    updateLocationDisplay();
+                },
+                (error) => {
+                    showError('No se pudo obtener tu ubicación');
+                    stopTracking();
+                },
+                {
+                    enableHighAccuracy: true,
+                    maximumAge: 0,
+                    timeout: 5000
+                }
+            );
+
+            trackingActive = true;
+        }
+
+        function stopTracking() {
+            if (watchId !== null) {
+                navigator.geolocation.clearWatch(watchId);
+                watchId = null;
+            }
+
+            const button = document.getElementById('trackingButton');
+            button.className = 'w-full px-4 py-3 bg-metro-blue text-white rounded-lg hover:bg-blue-700 font-semibold transition';
+            button.textContent = '▶️ Iniciar Tracking GPS';
+
+            document.getElementById('trackingActiveMessage').classList.add('hidden');
+            trackingActive = false;
+        }
+
+        function updateLocationDisplay() {
+            const statusDiv = document.getElementById('locationStatus');
+            if (currentLocation) {
+                statusDiv.className = 'bg-green-50 border border-green-200 rounded-lg p-4';
+                statusDiv.innerHTML = `
+                    <div class="font-semibold text-green-900 mb-2">✓ Ubicación Registrada</div>
+                    <div class="text-sm text-gray-700">
+                        Lat: ${currentLocation.latitude.toFixed(6)}
+                    </div>
+                    <div class="text-sm text-gray-700">
+                        Lon: ${currentLocation.longitude.toFixed(6)}
+                    </div>
+                    <div class="text-xs text-gray-500 mt-2">
+                        Última actualización: ${new Date().toLocaleTimeString('es-MX')}
+                    </div>
+                `;
+            }
+        }
+
+        function showError(message) {
+            const errorDiv = document.getElementById('locationError');
+            errorDiv.classList.remove('hidden');
+            errorDiv.querySelector('div').textContent = '⚠️ ' + message;
+        }
+
+        function hideError() {
+            document.getElementById('locationError').classList.add('hidden');
+        }
+
+        function getSeverityColor(severity) {
+            const colors = {
+                'critical': 'bg-red-100 text-red-800',
+                'high': 'bg-orange-100 text-orange-800',
+                'medium': 'bg-blue-100 text-blue-800',
+                'low': 'bg-green-100 text-green-800'
+            };
+            return colors[severity] || 'bg-gray-100 text-gray-800';
+        }
+
+        function getStatusColor(status) {
+            const colors = {
+                'pending': 'bg-yellow-100 text-yellow-800',
+                'in_progress': 'bg-blue-100 text-blue-800',
+                'resolved': 'bg-green-100 text-green-800'
+            };
+            return colors[status] || 'bg-gray-100 text-gray-800';
+        }
+
+        function handleLogout() {
+            localStorage.clear();
+            window.location.href = 'index.html';
+        }
+    </script>
+</body>
+</html>

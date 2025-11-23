@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Navegación - Metro CDMX</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'metro-blue': '#0066CC'
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 p-8">
+    <div class="max-w-4xl mx-auto">
+        <!-- Header -->
+        <div class="text-center mb-12">
+            <div class="w-20 h-20 bg-metro-blue rounded-full flex items-center justify-center mx-auto mb-4">
+                <span class="text-white font-bold text-3xl">M</span>
+            </div>
+            <h1 class="text-4xl font-bold text-gray-900 mb-2">Metro CDMX</h1>
+            <p class="text-xl text-gray-600">Sistema de Gestión - Navegación de Páginas</p>
+        </div>
+
+        <!-- Info -->
+        <div class="bg-blue-50 border-2 border-blue-200 rounded-lg p-6 mb-8">
+            <h2 class="text-lg font-bold text-blue-900 mb-2">ℹ️ Información</h2>
+            <p class="text-blue-800 text-sm">
+                Esta es la página de navegación del proyecto. Desde aquí puedes acceder a todas las páginas HTML del sistema.
+                <br><br>
+                <strong>Nota:</strong> Este proyecto usa datos de ejemplo (mock data) para demostración. 
+                Para conectar con un backend real, consulta el archivo <code class="bg-blue-100 px-2 py-1 rounded">README.md</code>
+            </p>
+        </div>
+
+        <!-- Páginas Públicas -->
+        <div class="bg-white rounded-lg shadow-lg p-6 mb-6">
+            <h2 class="text-2xl font-bold text-gray-900 mb-4">🌐 Páginas Públicas</h2>
+            <div class="space-y-3">
+                <a href="index.html" class="block p-4 border-2 border-gray-200 rounded-lg hover:border-metro-blue hover:shadow-md transition">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <h3 class="font-bold text-gray-900">Página de Inicio</h3>
+                            <p class="text-sm text-gray-600">Landing page principal - Solo botón de iniciar sesión</p>
+                        </div>
+                        <span class="text-2xl">🏠</span>
+                    </div>
+                </a>
+                
+                <a href="login.html" class="block p-4 border-2 border-gray-200 rounded-lg hover:border-metro-blue hover:shadow-md transition">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <h3 class="font-bold text-gray-900">Iniciar Sesión</h3>
+                            <p class="text-sm text-gray-600">Autenticación para personal del Metro</p>
+                        </div>
+                        <span class="text-2xl">🔐</span>
+                    </div>
+                </a>
+
+                <a href="public-dashboard.html" class="block p-4 border-2 border-gray-200 rounded-lg hover:border-metro-blue hover:shadow-md transition">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <h3 class="font-bold text-gray-900">Dashboard Público</h3>
+                            <p class="text-sm text-gray-600">Vista general del estado del metro (accesible para todos)</p>
+                        </div>
+                        <span class="text-2xl">📊</span>
+                    </div>
+                </a>
+
+                <a href="formulario.html" class="block p-4 border-2 border-gray-200 rounded-lg hover:border-green-500 hover:shadow-md transition">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <h3 class="font-bold text-gray-900">Formulario de Reportes</h3>
+                            <p class="text-sm text-gray-600">Reportar incidentes (sin necesidad de registro)</p>
+                        </div>
+                        <span class="text-2xl">📝</span>
+                    </div>
+                </a>
+            </div>
+        </div>
+
+        <!-- Dashboards por Rol -->
+        <div class="bg-white rounded-lg shadow-lg p-6 mb-6">
+            <h2 class="text-2xl font-bold text-gray-900 mb-4">👤 Dashboards por Rol de Usuario</h2>
+            <div class="space-y-3">
+                <a href="employee-dashboard.html" class="block p-4 border-2 border-gray-200 rounded-lg hover:border-blue-500 hover:shadow-md transition">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <h3 class="font-bold text-gray-900">Panel de Empleado</h3>
+                            <p class="text-sm text-gray-600">Gestión de incidentes y tracking GPS</p>
+                            <span class="text-xs text-gray-500 mt-1 inline-block">Rol: Empleado de Campo</span>
+                        </div>
+                        <span class="text-2xl">👷</span>
+                    </div>
+                </a>
+
+                <a href="manager-dashboard.html" class="block p-4 border-2 border-gray-200 rounded-lg hover:border-purple-500 hover:shadow-md transition">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <h3 class="font-bold text-gray-900">Panel de Jefe de Área</h3>
+                            <p class="text-sm text-gray-600">Gestión de equipo y recomendaciones IA</p>
+                            <span class="text-xs text-gray-500 mt-1 inline-block">Rol: Jefe de Área</span>
+                        </div>
+                        <span class="text-2xl">👨‍💼</span>
+                    </div>
+                </a>
+            </div>
+        </div>
+
+        <!-- Gestión de Personal -->
+        <div class="bg-white rounded-lg shadow-lg p-6 mb-6">
+            <h2 class="text-2xl font-bold text-gray-900 mb-4">⚙️ Gestión de Personal</h2>
+            <div class="space-y-3">
+                <a href="register.html" class="block p-4 border-2 border-gray-200 rounded-lg hover:border-orange-500 hover:shadow-md transition">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <h3 class="font-bold text-gray-900">Registrar Personal</h3>
+                            <p class="text-sm text-gray-600">Registro de jefes de área y empleados</p>
+                            <span class="text-xs text-orange-600 mt-1 inline-block">Acceso: Admin / Jefe de Área</span>
+                        </div>
+                        <span class="text-2xl">👥</span>
+                    </div>
+                </a>
+            </div>
+        </div>
+
+        <!-- Simulación de Login -->
+        <div class="bg-yellow-50 border-2 border-yellow-200 rounded-lg p-6 mb-6">
+            <h2 class="text-lg font-bold text-yellow-900 mb-3">🔑 Credenciales de Prueba</h2>
+            <p class="text-yellow-800 text-sm mb-3">
+                En <code class="bg-yellow-100 px-2 py-1 rounded">login.html</code> puedes usar estos emails para simular diferentes roles:
+            </p>
+            <div class="space-y-2 text-sm">
+                <div class="bg-white p-3 rounded">
+                    <strong><a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="3d505c535c5a584f7d5058494f52135e5250">[email&#160;protected]</a></strong> → Dashboard de Jefe de Área
+                </div>
+                <div class="bg-white p-3 rounded">
+                    <strong><a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="0b6e667b6764726e6e4b666e7f796425686466">[email&#160;protected]</a></strong> → Dashboard de Empleado
+                </div>
+                <p class="text-xs text-yellow-700 mt-3">
+                    💡 La contraseña puede ser cualquiera (es solo simulación)
+                </p>
+            </div>
+        </div>
+
+        <!-- Documentación -->
+        <div class="bg-white rounded-lg shadow-lg p-6">
+            <h2 class="text-2xl font-bold text-gray-900 mb-4">📚 Documentación</h2>
+            <div class="space-y-3">
+                <div class="p-4 border-2 border-gray-200 rounded-lg">
+                    <h3 class="font-bold text-gray-900 mb-2">📄 README.md</h3>
+                    <p class="text-sm text-gray-600 mb-3">
+                        Documentación completa del proyecto con instrucciones de uso e integración
+                    </p>
+                    <a href="README.md" download class="text-metro-blue hover:underline font-semibold text-sm">
+                        Descargar README.md →
+                    </a>
+                </div>
+
+                <div class="p-4 bg-gray-50 rounded-lg">
+                    <h3 class="font-bold text-gray-900 mb-2">🛠️ Stack Técnico</h3>
+                    <ul class="text-sm text-gray-600 space-y-1">
+                        <li>• HTML5 - Estructura</li>
+                        <li>• Tailwind CSS (CDN) - Estilos</li>
+                        <li>• JavaScript Vanilla - Lógica</li>
+                        <li>• LocalStorage - Persistencia</li>
+                    </ul>
+                </div>
+
+                <div class="p-4 bg-gray-50 rounded-lg">
+                    <h3 class="font-bold text-gray-900 mb-2">📱 Características</h3>
+                    <ul class="text-sm text-gray-600 space-y-1">
+                        <li>✓ Diseño 100% responsivo</li>
+                        <li>✓ Tracking GPS (Geolocation API)</li>
+                        <li>✓ Sistema de roles simulado</li>
+                        <li>✓ Mock data para demostración</li>
+                        <li>✓ Listo para integrar con backend</li>

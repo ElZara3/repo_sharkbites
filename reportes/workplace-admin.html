@@ -1,0 +1,379 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Panel de Administrador - Metro CDMX</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'metro-blue': '#0066CC',
+                        'metro-orange': '#F7931E'
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="min-h-screen bg-gray-100 font-sans">
+
+    <header class="bg-metro-blue text-white shadow-lg">
+        <div class="max-w-7xl mx-auto px-4 py-4 flex justify-between items-center">
+            <div>
+                <h1 class="text-2xl font-bold">🔧 Panel de Administrador</h1>
+                <p class="text-blue-100">Sistema Central de Control</p>
+            </div>
+            <div class="flex items-center space-x-4">
+                <span class="text-sm text-blue-100">Admin: <span class="font-semibold text-white">Roberto M.</span></span>
+                <a href="login.html" class="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition font-semibold">
+                    Cerrar Sesión
+                </a>
+            </div>
+        </div>
+    </header>
+
+    <main class="max-w-7xl mx-auto px-4 py-8 space-y-8">
+
+        <div class="bg-white rounded-lg shadow-lg border-t-4 border-metro-orange">
+            <div class="p-6 border-b border-gray-200">
+                <h2 class="text-2xl font-bold text-gray-900 flex items-center">
+                    📢 Generar Alerta del Sistema
+                </h2>
+                <p class="text-gray-600 text-sm mt-1">Configure la alerta y seleccione sus destinatarios (Público y/o Jefes de Área).</p>
+            </div>
+            
+            <div class="p-6 grid grid-cols-1 lg:grid-cols-2 gap-8">
+                <form id="alertForm" class="space-y-4">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Título de la Alerta</label>
+                            <input type="text" id="alertTitle" placeholder="Ej: Servicio Lento" class="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-metro-orange outline-none" required>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Gravedad</label>
+                            <select id="alertSeverity" class="w-full px-3 py-2 border rounded-lg outline-none" onchange="updatePreview()">
+                                <option value="info">Informativa (Azul)</option>
+                                <option value="warning">Precaución (Amarillo)</option>
+                                <option value="critical">Crítica (Rojo)</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Mensaje Detallado</label>
+                        <textarea id="alertMessage" rows="3" placeholder="Descripción del incidente..." class="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-metro-orange outline-none" required></textarea>
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Categoría del Incidente</label>
+                        <select id="alertCategory" class="w-full px-3 py-2 border rounded-lg outline-none bg-gray-50" onchange="updateManagerTarget()">
+                            <option value="">Seleccione categoría...</option>
+                            <option value="retrasos">Retrasos</option>
+                            <option value="asientos">Asientos Reservados</option>
+                            <option value="espacio">Espacio/Capacidad</option>
+                            <option value="fallas">Fallas Técnicas</option>
+                            <option value="mantenimiento">Mantenimiento/Limpieza</option>
+                            <option value="seguridad">Seguridad</option>
+                            <option value="accesibilidad">Accesibilidad</option>
+                            <option value="trabajadores">Trabajadores/Trato Personal</option>
+                            <option value="consultas">Consultas/Dudas</option>
+                            <option value="sugerencias">Sugerencias</option>
+                            <option value="cancelaciones">Cancelaciones</option>
+                            <option value="informacion">Información/Comunicación</option>
+                        </select>
+                        <p id="managerTargetText" class="text-xs text-metro-blue mt-1 font-semibold hidden">
+                            👤 Se notificará al: <span id="managerName"></span>
+                        </p>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Línea</label>
+                            <select id="alertLine" class="w-full px-3 py-2 border rounded-lg outline-none">
+                                <option value="">General (Todas)</option>
+                                <option value="Línea 1">Línea 1</option>
+                                <option value="Línea 2">Línea 2</option>
+                                <option value="Línea 3">Línea 3</option>
+                                </select>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Estación</label>
+                            <input type="text" id="alertStation" placeholder="Ej: Balderas" class="w-full px-3 py-2 border rounded-lg outline-none">
+                        </div>
+                    </div>
+
+                    <div class="bg-gray-50 p-4 rounded-lg border border-gray-200">
+                        <label class="block text-sm font-bold text-gray-900 mb-2">Destinatarios:</label>
+                        <div class="flex flex-col space-y-2">
+                            <label class="inline-flex items-center">
+                                <input type="checkbox" id="checkPublic" class="form-checkbox h-5 w-5 text-metro-orange" checked>
+                                <span class="ml-2 text-gray-700">🌐 Publicar en Dashboard Público</span>
+                            </label>
+                            <label class="inline-flex items-center">
+                                <input type="checkbox" id="checkManager" class="form-checkbox h-5 w-5 text-metro-blue">
+                                <span class="ml-2 text-gray-700">👨‍💼 Enviar a Jefe de Área Correspondiente</span>
+                            </label>
+                        </div>
+                    </div>
+
+                    <button type="submit" class="w-full py-3 bg-metro-orange text-white font-bold rounded-lg hover:bg-orange-600 transition shadow-md">
+                        🚀 Publicar Alerta
+                    </button>
+                </form>
+
+                <div class="bg-gray-100 rounded-lg p-6 flex flex-col items-center justify-center">
+                    <h3 class="text-sm font-bold text-gray-500 uppercase tracking-wide mb-4">Vista Previa (Estilo Dashboard)</h3>
+                    
+                    <div id="previewCard" class="w-full max-w-sm bg-blue-100 border-2 border-blue-200 p-4 rounded-lg shadow-sm transition-all duration-300">
+                        <div class="font-bold text-blue-900 mb-1" id="previewTitle">Título de la Alerta</div>
+                        <p class="text-sm text-blue-800 mb-2" id="previewMessage">El mensaje de la alerta aparecerá aquí...</p>
+                        <p class="text-xs text-blue-700 font-semibold flex items-center">
+                            📍 <span id="previewLocation">General</span>
+                        </p>
+                    </div>
+
+                    <div class="mt-8 text-center text-xs text-gray-400">
+                        Esta visualización es idéntica a la que verán los usuarios en el dashboard público.
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="bg-white rounded-lg shadow-lg p-6">
+            <div class="flex justify-between items-center mb-6">
+                <h2 class="text-xl font-bold text-gray-900">📥 Últimos Reportes Recibidos</h2>
+                <span class="px-3 py-1 bg-green-100 text-green-800 rounded-full text-xs font-semibold">Actualizado: Ahora mismo</span>
+            </div>
+
+            <div class="overflow-x-auto">
+                <table class="min-w-full text-left text-sm whitespace-nowrap">
+                    <thead class="uppercase tracking-wider border-b-2 border-gray-200 bg-gray-50">
+                        <tr>
+                            <th scope="col" class="px-6 py-4 font-semibold text-gray-500">ID</th>
+                            <th scope="col" class="px-6 py-4 font-semibold text-gray-500">Categoría</th>
+                            <th scope="col" class="px-6 py-4 font-semibold text-gray-500">Ubicación</th>
+                            <th scope="col" class="px-6 py-4 font-semibold text-gray-500">Gravedad</th>
+                            <th scope="col" class="px-6 py-4 font-semibold text-gray-500">Estado</th>
+                            <th scope="col" class="px-6 py-4 font-semibold text-gray-500">Jefe Asignado</th>
+                        </tr>
+                    </thead>
+                    <tbody id="reportsTableBody" class="divide-y divide-gray-100">
+                        </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div class="flex justify-center pt-4 pb-12">
+            <a href="reportes.html" class="group relative inline-flex items-center justify-center px-8 py-4 text-lg font-bold text-white transition-all duration-200 bg-gray-900 font-pj rounded-xl focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-900 hover:bg-gray-800">
+                <span class="mr-2">📝</span>
+                Crear Reporte Completo (Manual)
+                <div class="absolute -inset-3 rounded-xl bg-gradient-to-r from-blue-400 to-metro-orange opacity-20 group-hover:opacity-40 blur-lg transition-opacity duration-200"></div>
+            </a>
+        </div>
+
+    </main>
+
+    <footer class="bg-gray-900 text-white mt-8 border-t border-gray-800">
+        <div class="max-w-7xl mx-auto px-4 py-8 text-center">
+            <p class="text-gray-500 text-sm">© 2024 Metro CDMX - Panel Administrativo</p>
+        </div>
+    </footer>
+
+    <script>
+        // 1. LÓGICA DE JEFES DE ÁREA (Mapping)
+        const managerMapping = {
+            'retrasos': 'Jefe de Movilidad',
+            'asientos': 'Jefe de Movilidad',
+            'espacio': 'Jefe de Movilidad',
+            'fallas': 'Jefe de Mantenimiento',
+            'mantenimiento': 'Jefe de Mantenimiento',
+            'seguridad': 'Jefe de Seguridad',
+            'accesibilidad': 'Jefe de Accesibilidad',
+            'trabajadores': 'Jefe de Atención al Cliente',
+            'consultas': 'Jefe de Atención al Cliente',
+            'sugerencias': 'Jefe de Atención al Cliente',
+            'cancelaciones': 'Jefe de Atención al Cliente',
+            'informacion': 'Jefe de Atención al Cliente'
+        };
+
+        // 2. MOCK DATA: Últimos 5 reportes
+        const recentReports = [
+            { id: 1024, category: 'Fallas Técnicas', station: 'Pino Suárez (L1)', severity: 'critical', status: 'Pendiente', manager: 'Jefe de Mantenimiento' },
+            { id: 1023, category: 'Retrasos', station: 'Hidalgo (L2)', severity: 'warning', status: 'En Revisión', manager: 'Jefe de Movilidad' },
+            { id: 1022, category: 'Limpieza', station: 'Bellas Artes (L2)', severity: 'info', status: 'Resuelto', manager: 'Jefe de Mantenimiento' },
+            { id: 1021, category: 'Seguridad', station: 'Tacuba (L7)', severity: 'critical', status: 'Atendido', manager: 'Jefe de Seguridad' },
+            { id: 1020, category: 'Sugerencias', station: 'N/A', severity: 'info', status: 'Leído', manager: 'Jefe de Atención al Cliente' }
+        ];
+
+        // 3. INICIALIZACIÓN
+        document.addEventListener('DOMContentLoaded', () => {
+            loadReports();
+            setupLivePreview();
+        });
+
+        // Función para cargar tabla
+        function loadReports() {
+            const tbody = document.getElementById('reportsTableBody');
+            tbody.innerHTML = '';
+
+            recentReports.forEach(report => {
+                const severityClass = getSeverityBadge(report.severity);
+                const row = `
+                    <tr class="hover:bg-gray-50 transition">
+                        <td class="px-6 py-4 font-medium text-gray-900">#${report.id}</td>
+                        <td class="px-6 py-4 text-gray-600">${report.category}</td>
+                        <td class="px-6 py-4 text-gray-600">${report.station}</td>
+                        <td class="px-6 py-4">
+                            <span class="${severityClass} px-2 py-1 rounded-full text-xs font-semibold uppercase">
+                                ${report.severity}
+                            </span>
+                        </td>
+                        <td class="px-6 py-4 text-gray-600 text-xs font-bold">${report.status}</td>
+                        <td class="px-6 py-4 text-gray-500 text-sm italic">${report.manager}</td>
+                    </tr>
+                `;
+                tbody.innerHTML += row;
+            });
+        }
+
+        // Función auxiliar para colores de gravedad en tabla
+        function getSeverityBadge(severity) {
+            const styles = {
+                'critical': 'bg-red-100 text-red-800',
+                'warning': 'bg-yellow-100 text-yellow-800',
+                'info': 'bg-blue-100 text-blue-800'
+            };
+            return styles[severity] || 'bg-gray-100 text-gray-800';
+        }
+
+        // 4. LÓGICA DE FORMULARIO Y PREVIEW
+        const titleInput = document.getElementById('alertTitle');
+        const msgInput = document.getElementById('alertMessage');
+        const severityInput = document.getElementById('alertSeverity');
+        const lineInput = document.getElementById('alertLine');
+        const stationInput = document.getElementById('alertStation');
+        const categoryInput = document.getElementById('alertCategory');
+
+        // Actualizar preview en tiempo real
+        function setupLivePreview() {
+            [titleInput, msgInput, severityInput, lineInput, stationInput].forEach(input => {
+                input.addEventListener('input', updatePreview);
+            });
+        }
+
+        function updatePreview() {
+            // Actualizar textos
+            document.getElementById('previewTitle').textContent = titleInput.value || 'Título de la Alerta';
+            document.getElementById('previewMessage').textContent = msgInput.value || 'El mensaje de la alerta aparecerá aquí...';
+            
+            const loc = (lineInput.value || stationInput.value) 
+                ? `${lineInput.value} ${stationInput.value ? '- ' + stationInput.value : ''}` 
+                : 'General';
+            document.getElementById('previewLocation').textContent = loc;
+
+            // Actualizar estilos según gravedad (Critical/Warning/Info)
+            const card = document.getElementById('previewCard');
+            const severity = severityInput.value;
+            
+            // Reset clases
+            card.className = 'w-full max-w-sm border-2 p-4 rounded-lg shadow-sm transition-all duration-300';
+            
+            if (severity === 'critical') {
+                card.classList.add('bg-red-100', 'border-red-200', 'text-red-900');
+                document.getElementById('previewTitle').className = 'font-bold text-red-900 mb-1';
+            } else if (severity === 'warning') {
+                card.classList.add('bg-yellow-100', 'border-yellow-200', 'text-yellow-900');
+                document.getElementById('previewTitle').className = 'font-bold text-yellow-900 mb-1';
+            } else {
+                card.classList.add('bg-blue-100', 'border-blue-200', 'text-blue-900');
+                document.getElementById('previewTitle').className = 'font-bold text-blue-900 mb-1';
+            }
+        }
+
+        // Actualizar texto del Jefe de Área según categoría
+        function updateManagerTarget() {
+            const category = categoryInput.value;
+            const managerTextP = document.getElementById('managerTargetText');
+            const managerSpan = document.getElementById('managerName');
+            const checkManager = document.getElementById('checkManager');
+
+            if (category && managerMapping[category]) {
+                managerTextP.classList.remove('hidden');
+                managerSpan.textContent = managerMapping[category];
+                // Auto-checkear si se selecciona categoría (UX opcional)
+                checkManager.checked = true;
+            } else {
+                managerTextP.classList.add('hidden');
+            }
+        }
+
+        // 5. ENVÍO DE FORMULARIO (Guardado en BD)
+        document.getElementById('alertForm').addEventListener('submit', (e) => {
+            e.preventDefault();
+
+            const isPublic = document.getElementById('checkPublic').checked;
+            const isManager = document.getElementById('checkManager').checked;
+            const category = categoryInput.value;
+
+            if (!isPublic && !isManager) {
+                alert('⚠️ Error: Debes seleccionar al menos un destinatario (Público o Jefe de Área).');
+                return;
+            }
+
+            if (isManager && !category) {
+                alert('⚠️ Error: Para enviar a un Jefe de Área, debes seleccionar una Categoría.');
+                categoryInput.focus();
+                return;
+            }
+
+            // Preparar datos para enviar a la API
+            const alertData = {
+                title: titleInput.value,
+                message: msgInput.value,
+                severity: severityInput.value,
+                category: category,
+                line: lineInput.value,
+                station: stationInput.value,
+                send_to_public: isPublic,
+                send_to_manager: isManager,
+                created_by: 'Roberto M.' // En producción vendría del login
+            };
+
+            // Enviar a la API
+            fetch('http://localhost:5000/api/admin/create-alert', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(alertData)
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    let successMsg = "✅ Alerta creada exitosamente en la base de datos.\n";
+                    if (isPublic) successMsg += "- Publicada en Dashboard Público.\n";
+                    if (isManager) successMsg += `- Enviada a: ${managerMapping[category]}.`;
+                    
+                    alert(successMsg);
+                    
+                    // Resetear form y recargar tabla
+                    e.target.reset();
+                    updatePreview();
+                    document.getElementById('managerTargetText').classList.add('hidden');
+                    loadReports(); // Recargar la tabla
+                } else {
+                    alert('❌ Error al crear la alerta: ' + data.error);
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('❌ Error de conexión. No se pudo crear la alerta.');
+            });
+        });
+
+    </script>
+</body>
+</html>
